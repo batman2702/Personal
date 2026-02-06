@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  role      String   // ADMIN, EMPLOYEE, CONTRACT
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  inspections Inspection[]
+}
+
+model Location {
+  id        String   @id @default(uuid())
+  name      String
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  equipment Equipment[]
+  stock     Stock[]
+}
+
+model Equipment {
+  id             String   @id @default(uuid())
+  type           String   // FireExtinguisher, Hydrant, etc.
+  serialNumber   String   @unique
+  qrCode         String?  @unique
+  locationId     String
+  location       Location @relation(fields: [locationId], references: [id])
+  status         String   // Active, Maintenance, Retired
+  lastInspection DateTime?
+  nextInspection DateTime?
+  capacity       String?  // e.g., "5kg", "10L"
+  brand          String?
+  manufacturingDate DateTime?
+  expiryDate     DateTime?
+  
+  inspectionHistory Inspection[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Inspection {
+  id          String   @id @default(uuid())
+  equipmentId String
+  equipment   Equipment @relation(fields: [equipmentId], references: [id])
+  inspectorId String
+  inspector   User      @relation(fields: [inspectorId], references: [id])
+  date        DateTime  @default(now())
+  status      String    // Pass, Fail, NeedsAttention
+  notes       String?
+  photoUrl    String?   // Path to stored image
+  checklist   String?   // JSON string of checklist items completed
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Stock {
+  id          String   @id @default(uuid())
+  name        String
+  category    String   // Spare, Chemical, etc.
+  quantity    Int
+  minThreshold Int     @default(5)
+  locationId  String
+  location    Location @relation(fields: [locationId], references: [id])
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
