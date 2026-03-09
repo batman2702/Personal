@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
@@ -20,11 +21,13 @@ async function main() {
     });
 
     // Create Users
+    const passwordHash = await bcrypt.hash("password123", 10);
+
     const admin = await prisma.user.create({
-        data: { name: "Admin User", email: "admin@syngene.com", role: "ADMIN" },
+        data: { name: "Admin User", email: "admin@syngene.com", password: passwordHash, role: "ADMIN" },
     });
     const inspector = await prisma.user.create({
-        data: { name: "Inspector John", email: "john@syngene.com", role: "EMPLOYEE" },
+        data: { name: "Inspector John", email: "john@syngene.com", password: passwordHash, role: "EMPLOYEE" },
     });
 
     // Create Equipment
